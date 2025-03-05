@@ -1,4 +1,3 @@
-
 import { FC, useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -119,10 +118,7 @@ const FileUploader: FC<FileUploaderProps> = ({ onUploadSuccess }) => {
     
     try {
       // Parse Excel data
-      const parsedData = await parseExcelData(file);
-      
-      // Simulate API call to save data
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const parsedData = await parseExcelData(file!);
       
       // Set final progress
       setProgress(100);
@@ -146,21 +142,34 @@ const FileUploader: FC<FileUploaderProps> = ({ onUploadSuccess }) => {
         // Call the success callback
         onUploadSuccess(uploadDetails);
         
-        // Save to localStorage for persistence
-        const existingUploads = JSON.parse(localStorage.getItem('resultUploads') || '[]');
-        localStorage.setItem('resultUploads', JSON.stringify([uploadDetails, ...existingUploads]));
+        // Process student data for lookup
+        const existingDataStr = localStorage.getItem('studentData');
+        let studentMap = new Map();
         
-        // Store student data for lookup
-        const studentMap = new Map();
+        // If there's existing data, load it first
+        if (existingDataStr) {
+          studentMap = new Map(JSON.parse(existingDataStr));
+        }
+        
+        // Add new student data to the map
         parsedData.forEach(student => {
           studentMap.set(student.solRollNo, student);
           studentMap.set(student.examRollNo, student);
         });
+        
+        // Save updated student data
         localStorage.setItem('studentData', JSON.stringify(Array.from(studentMap.entries())));
         
-        // Reset form after successful upload
+        // Keep upload form open for next upload
         setTimeout(() => {
-          resetUpload();
+          // Only reset file and status, keep batch name and course type
+          setFile(null);
+          setFileName('');
+          setUploadStatus('idle');
+          setProgress(0);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
         }, 3000);
       }, 500);
     } catch (error) {

@@ -1,23 +1,72 @@
 
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FileUploader from '@/components/FileUploader';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Upload, Users, FileText, Search } from 'lucide-react';
+import { Download, Upload, Trash2, Search } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
 const Admin: FC = () => {
   const [activeTab, setActiveTab] = useState<string>('upload');
   const [uploadHistory, setUploadHistory] = useState<any[]>([]);
   const { toast } = useToast();
   
+  // Load upload history from localStorage when component mounts
+  useEffect(() => {
+    const storedUploads = localStorage.getItem('resultUploads');
+    if (storedUploads) {
+      setUploadHistory(JSON.parse(storedUploads));
+    }
+  }, []);
+  
   const handleSuccessfulUpload = (uploadDetails: any) => {
-    setUploadHistory(prev => [uploadDetails, ...prev]);
+    const newHistory = [uploadDetails, ...uploadHistory];
+    setUploadHistory(newHistory);
+    // Update localStorage
+    localStorage.setItem('resultUploads', JSON.stringify(newHistory));
+    
     toast({
       title: "Upload successful",
       description: `${uploadDetails.filename} has been successfully uploaded.`,
+    });
+  };
+  
+  const handleDeleteFile = (index: number) => {
+    // Create a copy of the upload history
+    const updatedHistory = [...uploadHistory];
+    const deletedFile = updatedHistory[index];
+    
+    // Remove the file at the given index
+    updatedHistory.splice(index, 1);
+    setUploadHistory(updatedHistory);
+    
+    // Update localStorage
+    localStorage.setItem('resultUploads', JSON.stringify(updatedHistory));
+    
+    // Also remove student data associated with this file
+    if (deletedFile && deletedFile.data) {
+      // Get current student data
+      const storedData = localStorage.getItem('studentData');
+      if (storedData) {
+        const studentMap = new Map(JSON.parse(storedData));
+        
+        // Remove entries for students in the deleted file
+        deletedFile.data.forEach((student: any) => {
+          studentMap.delete(student.solRollNo);
+          studentMap.delete(student.examRollNo);
+        });
+        
+        // Store updated student data
+        localStorage.setItem('studentData', JSON.stringify(Array.from(studentMap.entries())));
+      }
+    }
+    
+    toast({
+      title: "File deleted",
+      description: `${deletedFile.filename} has been removed from your uploads.`,
     });
   };
   
@@ -85,9 +134,11 @@ const Admin: FC = () => {
                                 {upload.status === 'complete' ? 'Complete' : 'Error'}
                               </span>
                             </td>
-                            <td className="py-3 px-4 text-sm">
-                              <button 
-                                className="text-university-600 hover:text-university-800 transition-colors mr-2"
+                            <td className="py-3 px-4 text-sm flex items-center">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-university-600 hover:text-university-800 transition-colors mr-1"
                                 onClick={() => {
                                   toast({
                                     title: "Download started",
@@ -96,10 +147,12 @@ const Admin: FC = () => {
                                 }}
                               >
                                 <Download className="h-4 w-4" />
-                              </button>
+                              </Button>
                               
-                              <button 
-                                className="text-university-600 hover:text-university-800 transition-colors"
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-university-600 hover:text-university-800 transition-colors mr-1"
                                 onClick={() => {
                                   toast({
                                     title: "Search results",
@@ -108,7 +161,16 @@ const Admin: FC = () => {
                                 }}
                               >
                                 <Search className="h-4 w-4" />
-                              </button>
+                              </Button>
+                              
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-red-500 hover:text-red-700 transition-colors"
+                                onClick={() => handleDeleteFile(index)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </td>
                           </tr>
                         ))}
