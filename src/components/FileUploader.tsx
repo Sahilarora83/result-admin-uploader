@@ -7,7 +7,43 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, X, FileX, Info } from "lucide-react";
 
-const FileUploader: FC = () => {
+interface FileUploaderProps {
+  onUploadSuccess: (uploadDetails: any) => void;
+}
+
+// Mock function to parse Excel data
+const parseExcelData = (file: File): Promise<any[]> => {
+  return new Promise((resolve) => {
+    // In a real application, you would use a library like xlsx or exceljs
+    // For this demo, we'll simulate parsing by generating mock data
+    setTimeout(() => {
+      const recordCount = Math.floor(Math.random() * 200) + 50; // Random number between 50-250
+      const mockData = [];
+      
+      for (let i = 0; i < recordCount; i++) {
+        mockData.push({
+          name: `Student ${i + 1}`,
+          solRollNo: `00-0-00-${(100000 + i).toString().padStart(6, '0')}`,
+          examRollNo: `${(1000000000000 + i).toString().slice(0, 12)}`,
+          course: "B.Com (Hons)",
+          semester: "IV",
+          session: "2023-2024",
+          subjects: [
+            { code: "BC401", name: "Financial Management", maxMarks: 100, marksObtained: Math.floor(Math.random() * 40) + 60, status: 'Pass' },
+            { code: "BC402", name: "Cost Accounting", maxMarks: 100, marksObtained: Math.floor(Math.random() * 40) + 60, status: 'Pass' },
+            { code: "BC403", name: "Business Statistics", maxMarks: 100, marksObtained: Math.floor(Math.random() * 40) + 60, status: 'Pass' },
+            { code: "BC404", name: "Corporate Law", maxMarks: 100, marksObtained: Math.floor(Math.random() * 40) + 60, status: 'Pass' },
+            { code: "BC405", name: "Income Tax Law", maxMarks: 100, marksObtained: Math.floor(Math.random() * 40) + 60, status: 'Pass' },
+          ]
+        });
+      }
+      
+      resolve(mockData);
+    }, 2000);
+  });
+};
+
+const FileUploader: FC<FileUploaderProps> = ({ onUploadSuccess }) => {
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -38,34 +74,7 @@ const FileUploader: FC = () => {
     }
   };
 
-  const simulateUpload = () => {
-    setIsUploading(true);
-    setUploadStatus('uploading');
-    setProgress(0);
-    
-    const interval = setInterval(() => {
-      setProgress((prevProgress) => {
-        const newProgress = prevProgress + 10;
-        
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsUploading(false);
-            setUploadStatus('success');
-            toast({
-              title: "Upload successful",
-              description: `${courseType} results for ${batchName} have been successfully uploaded.`,
-            });
-          }, 500);
-          return 100;
-        }
-        
-        return newProgress;
-      });
-    }, 300);
-  };
-
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!file) {
       toast({
         title: "No file selected",
@@ -93,7 +102,80 @@ const FileUploader: FC = () => {
       return;
     }
     
-    simulateUpload();
+    setIsUploading(true);
+    setUploadStatus('uploading');
+    setProgress(0);
+    
+    // Simulate progress updates
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 95) {
+          clearInterval(progressInterval);
+          return 95;
+        }
+        return prev + 5;
+      });
+    }, 200);
+    
+    try {
+      // Parse Excel data
+      const parsedData = await parseExcelData(file);
+      
+      // Simulate API call to save data
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Set final progress
+      setProgress(100);
+      
+      // Update status after a brief delay
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadStatus('success');
+        
+        // Store upload information
+        const uploadDetails = {
+          filename: fileName,
+          date: new Date().toISOString().split('T')[0],
+          records: parsedData.length,
+          status: 'complete',
+          batchName,
+          courseType,
+          data: parsedData
+        };
+        
+        // Call the success callback
+        onUploadSuccess(uploadDetails);
+        
+        // Save to localStorage for persistence
+        const existingUploads = JSON.parse(localStorage.getItem('resultUploads') || '[]');
+        localStorage.setItem('resultUploads', JSON.stringify([uploadDetails, ...existingUploads]));
+        
+        // Store student data for lookup
+        const studentMap = new Map();
+        parsedData.forEach(student => {
+          studentMap.set(student.solRollNo, student);
+          studentMap.set(student.examRollNo, student);
+        });
+        localStorage.setItem('studentData', JSON.stringify(Array.from(studentMap.entries())));
+        
+        // Reset form after successful upload
+        setTimeout(() => {
+          resetUpload();
+        }, 3000);
+      }, 500);
+    } catch (error) {
+      console.error('Error processing file:', error);
+      setIsUploading(false);
+      setUploadStatus('error');
+      setProgress(0);
+      clearInterval(progressInterval);
+      
+      toast({
+        title: "Upload failed",
+        description: "There was an error processing your file. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const resetUpload = () => {
