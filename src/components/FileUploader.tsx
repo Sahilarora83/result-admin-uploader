@@ -3,8 +3,9 @@ import { FC, useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, X } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, X, FileX, Info } from "lucide-react";
 
 const FileUploader: FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -12,6 +13,8 @@ const FileUploader: FC = () => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [progress, setProgress] = useState<number>(0);
+  const [batchName, setBatchName] = useState<string>('');
+  const [courseType, setCourseType] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -51,7 +54,7 @@ const FileUploader: FC = () => {
             setUploadStatus('success');
             toast({
               title: "Upload successful",
-              description: "Student results have been successfully uploaded.",
+              description: `${courseType} results for ${batchName} have been successfully uploaded.`,
             });
           }, 500);
           return 100;
@@ -72,6 +75,24 @@ const FileUploader: FC = () => {
       return;
     }
     
+    if (!batchName.trim()) {
+      toast({
+        title: "Batch name required",
+        description: "Please enter a batch name for this upload.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!courseType.trim()) {
+      toast({
+        title: "Course type required",
+        description: "Please enter a course type for this upload.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     simulateUpload();
   };
 
@@ -86,22 +107,49 @@ const FileUploader: FC = () => {
   };
 
   return (
-    <Card className="w-full glass-panel animate-fade-in-up">
-      <CardHeader>
-        <CardTitle className="text-university-800">Upload Student Results</CardTitle>
+    <Card className="w-full glass-panel animate-fade-in-up shadow-lg">
+      <CardHeader className="bg-university-50 rounded-t-lg">
+        <CardTitle className="text-university-800 flex items-center gap-2">
+          <Upload className="h-5 w-5" />
+          Upload Student Results
+        </CardTitle>
         <CardDescription>
           Upload Excel file (.xlsx, .xls, .csv) containing student results data.
         </CardDescription>
       </CardHeader>
       
-      <CardContent>
+      <CardContent className="p-6">
         <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="batchName" className="text-gray-700">Batch Name</Label>
+              <Input
+                id="batchName"
+                placeholder="e.g., BA Program 2023-24"
+                value={batchName}
+                onChange={(e) => setBatchName(e.target.value)}
+                className="border-gray-300 focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="courseType" className="text-gray-700">Course Type</Label>
+              <Input
+                id="courseType"
+                placeholder="e.g., Internal Assessment"
+                value={courseType}
+                onChange={(e) => setCourseType(e.target.value)}
+                className="border-gray-300 focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+          </div>
+          
           <div 
             className={`
               border-2 border-dashed rounded-lg p-8 
               ${file ? 'border-university-300 bg-university-50/50' : 'border-gray-300 hover:border-university-300 bg-gray-50/50'} 
               transition-all duration-300 
               flex flex-col items-center justify-center gap-4
+              relative
             `}
           >
             {!file ? (
@@ -139,29 +187,36 @@ const FileUploader: FC = () => {
                     onClick={resetUpload}
                     className="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200"
                     disabled={isUploading}
+                    aria-label="Remove file"
                   >
                     <X className="h-4 w-4 text-gray-500" />
                   </button>
                 </div>
                 
                 {uploadStatus === 'uploading' && (
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                    <div 
-                      className="bg-university-500 h-2 rounded-full transition-all duration-300 ease-out"
-                      style={{ width: `${progress}%` }}
-                    ></div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Uploading...</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-university-500 h-2 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
                   </div>
                 )}
                 
                 {uploadStatus === 'success' && (
-                  <div className="flex items-center gap-2 text-green-600 text-sm">
+                  <div className="flex items-center gap-2 text-green-600 text-sm bg-green-50 p-2 rounded">
                     <CheckCircle className="h-4 w-4" />
-                    <span>Upload complete</span>
+                    <span>Upload complete! Results are now in the system.</span>
                   </div>
                 )}
                 
                 {uploadStatus === 'error' && (
-                  <div className="flex items-center gap-2 text-red-500 text-sm">
+                  <div className="flex items-center gap-2 text-red-500 text-sm bg-red-50 p-2 rounded">
                     <AlertCircle className="h-4 w-4" />
                     <span>Upload failed. Please try again.</span>
                   </div>
@@ -170,22 +225,44 @@ const FileUploader: FC = () => {
             )}
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="requirements" className="text-gray-700">Requirements</Label>
-            <ul className="list-disc list-inside text-xs text-gray-600 space-y-1">
-              <li>Excel file must contain headers: Student Name, SOL Roll No, Exam Roll No, Course, etc.</li>
-              <li>Each student's data must be in a separate row</li>
-              <li>Maximum file size: 10MB</li>
-            </ul>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Info className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <h4 className="text-sm font-medium text-blue-700 mb-1">File Requirements</h4>
+                <ul className="list-disc list-inside text-xs text-blue-600 space-y-1">
+                  <li>Excel file must contain headers: Student Name, SOL Roll No (format: 00-0-00-000000), Exam Roll No</li>
+                  <li>Each student's data must be in a separate row</li>
+                  <li>Include columns for course code, marks obtained, and maximum marks</li>
+                  <li>Maximum file size: 10MB</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <FileX className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <h4 className="text-sm font-medium text-yellow-700 mb-1">Common Upload Errors</h4>
+                <ul className="list-disc list-inside text-xs text-yellow-600 space-y-1">
+                  <li>Missing required columns in the Excel file</li>
+                  <li>Invalid SOL Roll Number format (must be 00-0-00-000000)</li>
+                  <li>Duplicate student entries</li>
+                  <li>Invalid marks (exceeding maximum marks)</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>
       
-      <CardFooter className="flex justify-end gap-3">
+      <CardFooter className="flex justify-end gap-3 bg-gray-50 rounded-b-lg p-4">
         <Button 
           variant="outline" 
           onClick={resetUpload}
           disabled={!file || isUploading}
+          className="border-gray-300"
         >
           Reset
         </Button>

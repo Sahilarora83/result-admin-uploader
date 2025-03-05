@@ -1,5 +1,5 @@
 
-import { FC, useState, useEffect } from 'react';
+import { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,12 @@ const ResultForm: FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Format SOL Roll Number with dashes (XX-X-XX-XXXXXX)
+  // Format SOL Roll Number with dashes (00-0-00-000000)
   const formatSolRollNo = (value: string) => {
     // Remove all non-digit characters
     const digits = value.replace(/\D/g, '');
     
-    // Format with dashes according to the pattern XX-X-XX-XXXXXX
+    // Format with dashes according to the pattern 00-0-00-000000
     if (digits.length <= 2) {
       return digits;
     } else if (digits.length <= 3) {
@@ -57,10 +57,10 @@ const ResultForm: FC = () => {
     }
     
     // Validate SOL Roll Number format if provided
-    if (solRollNo && !solRollNo.match(/^\d{2}-\d-\d{2}-\d{6}$/)) {
+    if (solRollNo && solRollNo.length !== 14) {
       toast({
         title: "Error",
-        description: "Please enter a valid SOL Roll Number in format XX-X-XX-XXXXXX",
+        description: "SOL Roll Number must be in format 00-0-00-000000 (14 characters)",
         variant: "destructive",
       });
       return;
@@ -99,12 +99,12 @@ const ResultForm: FC = () => {
           </Label>
           <Input
             id="solRollNo"
-            placeholder="XX-X-XX-XXXXXX"
+            placeholder="00-0-00-000000"
             className="transition-all duration-300 focus:ring-2 focus:ring-green-500 border-gray-300 h-12"
             value={solRollNo}
             onChange={handleSolRollNoChange}
             required={!examRollNo}
-            maxLength={13} // XX-X-XX-XXXXXX (13 characters including dashes)
+            maxLength={14} // 00-0-00-000000 (14 characters including dashes)
           />
         </div>
         

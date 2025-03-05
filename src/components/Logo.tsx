@@ -17,7 +17,7 @@ const Logo: FC<LogoProps> = ({ size = 'md', className = '' }) => {
     <div className={`flex items-center gap-3 ${className}`}>
       <div className={`${sizes[size]} relative overflow-hidden animate-fade-in rounded-full`}>
         <img 
-          src="/lovable-uploads/759006c9-8433-4c72-9e0f-402d9984606d.png" 
+          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSe80MUAyEyF80wquwX4-JrwXrZyq49VdNXwQ&s" 
           alt="University Logo" 
           className="w-full h-full object-contain"
         />

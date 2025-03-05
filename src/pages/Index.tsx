@@ -2,6 +2,7 @@
 import { FC } from 'react';
 import Footer from '@/components/Footer';
 import ResultForm from '@/components/ResultForm';
+import Logo from '@/components/Logo';
 
 const Index: FC = () => {
   const currentYear = new Date().getFullYear();
@@ -13,11 +14,7 @@ const Index: FC = () => {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-6">
             <div className="flex justify-center items-center gap-4 mb-4">
-              <img
-                src="/lovable-uploads/759006c9-8433-4c72-9e0f-402d9984606d.png"
-                alt="University of Delhi Logo"
-                className="w-16 h-16 md:w-20 md:h-20"
-              />
+              <Logo size="lg" />
             </div>
             
             <div className="text-left mx-auto max-w-3xl mb-8">
@@ -35,17 +32,18 @@ const Index: FC = () => {
           
           <div className="border-t border-b border-gray-300 py-4 mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-center text-green-900">
-              Internal Assessment Result 2023-2024
+              Internal Assessment Result {academicYear}
             </h2>
           </div>
           
           <ResultForm />
           
           <div className="mt-16 text-center text-gray-800">
-            <p>©2024 School of Open Learning, University of Delhi</p>
+            <p>©{currentYear} School of Open Learning, University of Delhi</p>
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };
