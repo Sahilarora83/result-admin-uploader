@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 
 const Index: FC = () => {
   const currentYear = new Date().getFullYear();
-  const academicYear = `${currentYear}-${currentYear + 1}`;
+  const academicYear = "2024-2025";
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-100 to-green-200">
@@ -49,5 +49,4 @@ const Index: FC = () => {
     </div>
   );
 };
-
 export default Index;
