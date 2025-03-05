@@ -131,9 +131,7 @@ const Login: FC = () => {
               )}
             </Button>
             
-            <div className="text-center text-xs text-gray-500 mt-4">
-              <p>For demo purposes: Username: admin, Password: admin123</p>
-            </div>
+           
           </div>
         </form>
         
