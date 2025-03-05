@@ -1,10 +1,10 @@
+// src/components/ResultForm.tsx
 import { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import axios from 'axios'; // Add Axios for API calls
 
 const ResultForm: FC = () => {
   const [solRollNo, setSolRollNo] = useState<string>('');
@@ -21,7 +21,7 @@ const ResultForm: FC = () => {
     setExamRollNo(e.target.value);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!solRollNo && !examRollNo) {
@@ -36,18 +36,18 @@ const ResultForm: FC = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await axios.get('/api/fetch-student-data', {
-        params: { solRollNo, examRollNo }
-      });
-
-      if (response.data) {
-        navigate(`/results`, { state: { studentData: response.data } });
-      } else {
-        toast({
-          title: "No data found",
-          description: "No results found for the provided roll numbers.",
-          variant: "destructive",
-        });
+      const storedData = localStorage.getItem('studentData');
+      if (storedData) {
+        const studentData = JSON.parse(storedData).find((student: any) => student.solRollNo === solRollNo || student.examRollNo === examRollNo);
+        if (studentData) {
+          navigate(`/results`, { state: { studentData } });
+        } else {
+          toast({
+            title: "No data found",
+            description: "No results found for the provided roll numbers.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       toast({
