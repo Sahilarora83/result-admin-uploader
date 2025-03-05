@@ -9,25 +9,28 @@ import { Printer, Download, ArrowLeft } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface StudentData {
+  examFlag: string;
+  examType: string;
+  collCode: string;
+  refNo: string;
+  rollNo: string;
   name: string;
-  solRollNo: string;
-  examRollNo: string;
-  course: string;
-  semester: string;
-  session: string;
-  subjects: {
-    code: string;
-    name: string;
-    maxMarks: number;
-    marksObtained: number;
-    status: 'Pass' | 'Fail';
-  }[];
+  courseCode: string;
+  courseName: string;
+  partAll: number;
+  semAll: number;
+  paperId: string;
+  paperName: string;
+  maxMarks: number;
+  obtMarks: number;
+  paperType: string;
+  examRollNumber: string;
 }
 
 const Results: FC = () => {
   const location = useLocation();
   const { studentData } = location.state || {};
-  const [data, setData] = useState<StudentData | null>(studentData || null);
+  const [data, setData] = useState<StudentData[] | null>(studentData || null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -103,7 +106,7 @@ const Results: FC = () => {
           </p>
         </div>
         <div className="space-y-6">
-          <StudentInfo student={data} />
+          <StudentInfo student={data[0]} />
           <ResultTable studentData={data} />
           <div className="print:hidden glass-panel p-4 rounded-lg animate-fade-in-up">
             <p className="text-sm text-gray-600">
